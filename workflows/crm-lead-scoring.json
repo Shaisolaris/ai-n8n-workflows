@@ -1,0 +1,18 @@
+{
+  "name": "CRM Lead Scoring with AI",
+  "nodes": [
+    {"name": "Webhook Trigger", "type": "n8n-nodes-base.webhook", "position": [200, 300], "parameters": {"path": "lead-scoring", "httpMethod": "POST"}},
+    {"name": "Extract Lead Data", "type": "n8n-nodes-base.set", "position": [400, 300], "parameters": {"values": {"string": [{"name": "email", "value": "={{$json.email}}"}, {"name": "company", "value": "={{$json.company}}"}, {"name": "source", "value": "={{$json.source}}"}]}}},
+    {"name": "Enrich with Clearbit", "type": "n8n-nodes-base.httpRequest", "position": [600, 200], "parameters": {"url": "https://company.clearbit.com/v2/companies/find", "method": "GET", "queryParameters": {"domain": "={{$json.company}}"}}},
+    {"name": "AI Score Lead", "type": "n8n-nodes-base.openAi", "position": [800, 300], "parameters": {"model": "gpt-4o", "prompt": "Score this lead 1-100 based on: company size, industry, source. Lead: {{$json.email}} from {{$json.company}}, source: {{$json.source}}. Enrichment: {{$json.enrichment}}. Respond with JSON: {score, reasoning, priority}"}},
+    {"name": "Route by Score", "type": "n8n-nodes-base.if", "position": [1000, 300], "parameters": {"conditions": {"number": [{"value1": "={{$json.score}}", "operation": "largerEqual", "value2": 70}]}}},
+    {"name": "Create HubSpot Contact", "type": "n8n-nodes-base.hubspot", "position": [1200, 200], "parameters": {"operation": "create", "email": "={{$json.email}}", "additionalFields": {"leadScore": "={{$json.score}}"}}},
+    {"name": "Notify Sales Slack", "type": "n8n-nodes-base.slack", "position": [1200, 400], "parameters": {"channel": "#sales-leads", "text": "🔥 Hot lead: {{$json.email}} (Score: {{$json.score}})\nCompany: {{$json.company}}\nReason: {{$json.reasoning}}"}}
+  ],
+  "connections": {
+    "Webhook Trigger": {"main": [[{"node": "Extract Lead Data"}]]},
+    "Extract Lead Data": {"main": [[{"node": "Enrich with Clearbit"}, {"node": "AI Score Lead"}]]},
+    "AI Score Lead": {"main": [[{"node": "Route by Score"}]]},
+    "Route by Score": {"main": [[{"node": "Create HubSpot Contact"}], [{"node": "Notify Sales Slack"}]]}
+  }
+}

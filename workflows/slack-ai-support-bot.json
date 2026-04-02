@@ -1,0 +1,19 @@
+{
+  "name": "Slack AI Support Bot",
+  "nodes": [
+    {"name": "Slack Trigger", "type": "n8n-nodes-base.slackTrigger", "position": [200, 300], "parameters": {"channel": "#support", "events": ["message"]}},
+    {"name": "Filter Bot Messages", "type": "n8n-nodes-base.if", "position": [400, 300], "parameters": {"conditions": {"boolean": [{"value1": "={{$json.bot_id === undefined}}", "value2": true}]}}},
+    {"name": "Search Knowledge Base", "type": "n8n-nodes-base.httpRequest", "position": [600, 200], "parameters": {"url": "{{$env.KB_API_URL}}/search", "method": "POST", "body": {"query": "={{$json.text}}", "top_k": 3}}},
+    {"name": "Generate AI Response", "type": "n8n-nodes-base.openAi", "position": [800, 300], "parameters": {"model": "gpt-4o", "systemMessage": "You are a helpful support bot. Use the knowledge base context to answer. If unsure, say you'll escalate to a human.", "prompt": "Question: {{$json.text}}\n\nKnowledge base results:\n{{$json.kb_results}}"}},
+    {"name": "Post Reply", "type": "n8n-nodes-base.slack", "position": [1000, 300], "parameters": {"channel": "={{$json.channel}}", "text": "={{$json.response}}", "threadTs": "={{$json.ts}}"}},
+    {"name": "Escalate if Uncertain", "type": "n8n-nodes-base.if", "position": [1000, 500], "parameters": {"conditions": {"string": [{"value1": "={{$json.response}}", "operation": "contains", "value2": "escalate"}]}}},
+    {"name": "Create Zendesk Ticket", "type": "n8n-nodes-base.httpRequest", "position": [1200, 500], "parameters": {"url": "{{$env.ZENDESK_URL}}/tickets", "method": "POST", "body": {"subject": "Slack escalation", "description": "={{$json.text}}"}}}
+  ],
+  "connections": {
+    "Slack Trigger": {"main": [[{"node": "Filter Bot Messages"}]]},
+    "Filter Bot Messages": {"main": [[{"node": "Search Knowledge Base"}]]},
+    "Search Knowledge Base": {"main": [[{"node": "Generate AI Response"}]]},
+    "Generate AI Response": {"main": [[{"node": "Post Reply"}, {"node": "Escalate if Uncertain"}]]},
+    "Escalate if Uncertain": {"main": [[{"node": "Create Zendesk Ticket"}]]}
+  }
+}

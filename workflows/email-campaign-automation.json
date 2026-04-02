@@ -1,0 +1,16 @@
+{
+  "name": "AI Email Campaign Automation",
+  "nodes": [
+    {"name": "Schedule Trigger", "type": "n8n-nodes-base.scheduleTrigger", "position": [200, 300], "parameters": {"rule": {"interval": [{"field": "days", "daysInterval": 1}]}}},
+    {"name": "Get Contacts", "type": "n8n-nodes-base.httpRequest", "position": [400, 300], "parameters": {"url": "{{$env.CRM_API_URL}}/contacts", "method": "GET", "queryParameters": {"status": "active", "last_email_gt": "7d"}}},
+    {"name": "Generate Personalized Email", "type": "n8n-nodes-base.openAi", "position": [600, 300], "parameters": {"model": "gpt-4o", "prompt": "Write a personalized follow-up email for {{$json.name}} at {{$json.company}}. Their last interaction was: {{$json.last_interaction}}. Keep it under 150 words, professional but friendly. Return JSON: {subject, body}"}},
+    {"name": "Send via Resend", "type": "n8n-nodes-base.httpRequest", "position": [800, 300], "parameters": {"url": "https://api.resend.com/emails", "method": "POST", "body": {"from": "sales@company.com", "to": "={{$json.email}}", "subject": "={{$json.subject}}", "html": "={{$json.body}}"}}},
+    {"name": "Log to Airtable", "type": "n8n-nodes-base.airtable", "position": [1000, 300], "parameters": {"operation": "create", "table": "Email Log", "fields": {"Contact": "={{$json.email}}", "Subject": "={{$json.subject}}", "Sent At": "={{$now.toISO()}}"}}}
+  ],
+  "connections": {
+    "Schedule Trigger": {"main": [[{"node": "Get Contacts"}]]},
+    "Get Contacts": {"main": [[{"node": "Generate Personalized Email"}]]},
+    "Generate Personalized Email": {"main": [[{"node": "Send via Resend"}]]},
+    "Send via Resend": {"main": [[{"node": "Log to Airtable"}]]}
+  }
+}

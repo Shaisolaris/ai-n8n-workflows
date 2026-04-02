@@ -1,0 +1,18 @@
+{
+  "name": "AI Content Repurposing Pipeline",
+  "nodes": [
+    {"name": "RSS Feed Trigger", "type": "n8n-nodes-base.rssFeedRead", "position": [200, 300], "parameters": {"url": "https://blog.company.com/feed"}},
+    {"name": "Extract Article", "type": "n8n-nodes-base.httpRequest", "position": [400, 300], "parameters": {"url": "={{$json.link}}", "method": "GET"}},
+    {"name": "Generate Twitter Thread", "type": "n8n-nodes-base.openAi", "position": [600, 200], "parameters": {"model": "gpt-4o", "prompt": "Turn this article into a 5-tweet thread. Each tweet under 280 chars. Article: {{$json.content}}"}},
+    {"name": "Generate LinkedIn Post", "type": "n8n-nodes-base.openAi", "position": [600, 400], "parameters": {"model": "gpt-4o", "prompt": "Write a LinkedIn post (300 words max) summarizing this article with key takeaways. Article: {{$json.content}}"}},
+    {"name": "Generate Newsletter Snippet", "type": "n8n-nodes-base.openAi", "position": [600, 600], "parameters": {"model": "gpt-4o", "prompt": "Write a 100-word newsletter snippet for this article. Include a hook and CTA. Article: {{$json.content}}"}},
+    {"name": "Save to Notion", "type": "n8n-nodes-base.notion", "position": [900, 300], "parameters": {"operation": "create", "databaseId": "={{$env.NOTION_DB}}", "properties": {"Title": "={{$json.title}}", "Twitter": "={{$json.twitter_thread}}", "LinkedIn": "={{$json.linkedin_post}}", "Newsletter": "={{$json.newsletter}}"}}}
+  ],
+  "connections": {
+    "RSS Feed Trigger": {"main": [[{"node": "Extract Article"}]]},
+    "Extract Article": {"main": [[{"node": "Generate Twitter Thread"}, {"node": "Generate LinkedIn Post"}, {"node": "Generate Newsletter Snippet"}]]},
+    "Generate Twitter Thread": {"main": [[{"node": "Save to Notion"}]]},
+    "Generate LinkedIn Post": {"main": [[{"node": "Save to Notion"}]]},
+    "Generate Newsletter Snippet": {"main": [[{"node": "Save to Notion"}]]}
+  }
+}
