@@ -44,3 +44,31 @@ Slack message trigger → Checks Zendesk for existing tickets → OpenAI generat
 
 ### Content Repurposing (`content-repurposing.json`)
 Notion page trigger → Extracts blog post → OpenAI generates 5 tweet threads + 1 LinkedIn post + 1 email newsletter version → Saves all to Notion.
+
+## Architecture
+
+```
+.editorconfig
+.github/workflows/ci.yml
+.gitignore
+DEMO.md
+IMPORT_GUIDE.md
+LICENSE
+README.md
+examples/demo-import.sh
+workflows/content-repurposing.json
+workflows/crm-lead-scoring.json
+workflows/email-campaign-automation.json
+workflows/slack-ai-support-bot.json
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Open a Pull Request
+
+## License
+
+MIT
