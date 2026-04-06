@@ -29,3 +29,18 @@ OpenAI, Slack, HubSpot, Clearbit, Resend, Airtable, Zendesk, Notion, RSS, Webhoo
 
 ## License
 MIT
+
+
+## What Each Workflow Does
+
+### CRM Lead Scoring (`crm-lead-scoring.json`)
+Webhook receives new lead → Clearbit enrichment → OpenAI scores lead quality (1-100) → Updates HubSpot contact → Notifies sales team on Slack if score > 70.
+
+### Email Campaign Automation (`email-campaign-automation.json`)
+Scheduled trigger → Pulls contacts from Airtable → OpenAI generates personalized subject + body → Sends via Resend → Logs results back to Airtable.
+
+### Slack AI Support Bot (`slack-ai-support-bot.json`)
+Slack message trigger → Checks Zendesk for existing tickets → OpenAI generates response using knowledge base → Posts reply in Slack thread → Creates Zendesk ticket if unresolved.
+
+### Content Repurposing (`content-repurposing.json`)
+Notion page trigger → Extracts blog post → OpenAI generates 5 tweet threads + 1 LinkedIn post + 1 email newsletter version → Saves all to Notion.
