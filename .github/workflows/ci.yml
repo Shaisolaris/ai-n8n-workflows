@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate workflow JSON
+        run: |
+          python3 -c "
+          import json, pathlib, sys
+          errors = []
+          for p in pathlib.Path('workflows').glob('*.json'):
+              try:
+                  d = json.loads(p.read_text())
+                  nodes = d.get('nodes', [])
+                  conns = d.get('connections', {})
+                  if not nodes:
+                      errors.append(f'{p}: no nodes found')
+                  if not conns:
+                      errors.append(f'{p}: no connections found')
+                  print(f'{p.name}: {len(nodes)} nodes, {len(conns)} connections')
+              except json.JSONDecodeError as e:
+                  errors.append(f'{p}: {e}')
+          if errors:
+              for e in errors: print(e)
+              sys.exit(1)
+          print('All workflows valid')
+          "
