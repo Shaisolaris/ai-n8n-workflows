@@ -1,5 +1,7 @@
 # ai-n8n-workflows
 
+![CI](https://github.com/Shaisolaris/ai-n8n-workflows/actions/workflows/ci.yml/badge.svg)
+
 Production-ready n8n workflow templates combining AI (OpenAI GPT-4o) with popular SaaS integrations. 4 workflow templates for CRM lead scoring, email campaign automation, Slack AI support bot, and content repurposing pipeline.
 
 ## Workflows
